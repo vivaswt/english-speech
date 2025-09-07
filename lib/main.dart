@@ -60,12 +60,13 @@ class _MainAppState extends State<MainApp> {
       _errorMessage = null;
     });
     try {
-      final jsonString = await notion.fetchWebArticles();
-      final articles = notion.parseWebArticles(jsonString);
-      final articles_ = await notion.enrichArticlesWithWebTitles(articles);
+      final articles = await notion
+          .fetchWebArticles()
+          .then(notion.parseWebArticles)
+          .then(notion.enrichArticlesWithWebTitles);
 
       setState(() {
-        _articles = articles_; // Store articles directly
+        _articles = articles; // Store articles directly
         _processState = ProcessState.done;
       });
     } catch (e) {

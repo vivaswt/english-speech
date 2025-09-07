@@ -269,7 +269,7 @@ class Paragraph extends Block {
   }
 
   @override
-  List<String> format() => [formattedRichTexts(richTexts)];
+  List<String> format() => [''] + [formattedRichTexts(richTexts)];
 }
 
 class Headings extends Block {
@@ -322,7 +322,8 @@ class Headings extends Block {
   }
 
   @override
-  List<String> format() => ['#' * level + ' ' + formattedRichTexts(richTexts)];
+  List<String> format() =>
+      [''] + ['#' * level + ' ' + formattedRichTexts(richTexts)];
 }
 
 class BulletedListItem extends Block {
@@ -420,7 +421,7 @@ class Image extends Block {
   }
 
   @override
-  List<String> format() => ['![Image]($url)'];
+  List<String> format() => [''] + ['![Image]($url)'];
 }
 
 class Code extends Block {
@@ -470,7 +471,7 @@ class Code extends Block {
   }
 
   @override
-  List<String> format() => ['```', formattedRichTexts(richTexts), '```'];
+  List<String> format() => [''] + ['```', formattedRichTexts(richTexts), '```'];
 }
 
 class NumberedListItem extends Block {
@@ -570,7 +571,7 @@ class Quote extends Block {
   }
 
   @override
-  List<String> format() => ['> ' + formattedRichTexts(richTexts)];
+  List<String> format() => [''] + ['> ' + formattedRichTexts(richTexts)];
 }
 
 class Callout extends Block {
@@ -620,7 +621,7 @@ class Callout extends Block {
   }
 
   @override
-  List<String> format() => ['>>> ' + formattedRichTexts(richTexts)];
+  List<String> format() => [''] + ['>>> ' + formattedRichTexts(richTexts)];
 }
 
 class Table extends Block {
@@ -788,7 +789,7 @@ class OtherBlock extends Block {
   }
 
   @override
-  List<String> format() => ['★Unknown block type: $type'];
+  List<String> format() => [''] + ['★Unknown block type: $type'];
 }
 
 typedef RichTexts = List<RichText>;
