@@ -1,0 +1,28 @@
+# Miscellaneous
+.DS_Store
+*.pem
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# IDEs
+.idea/
+.vscode/
+
+# Generated files
+lib/generated_plugin_registrant.dart
+
+# Secrets
+# It's a good practice to add files containing secrets here,
+# even if they are not meant to be checked in.
+# For example:
+# .env
+
+# Windows
+Thumbs.db
