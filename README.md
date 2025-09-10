@@ -11,10 +11,10 @@ The application performs the following steps when the "Run" button is pressed:
 1.  **Fetch Articles**: Retrieves a list of unprocessed articles from a specified Notion database. An article is considered "unprocessed" if its "Processed" checkbox is unchecked.
 2.  **Enrich Titles**: For each article, it fetches the source web page to get the accurate `<title>`, ensuring the article's name is correct.
 3.  **Process Each Article**: Iterates through the list of articles and performs the following for each one:
-    a. **Fetch Content**: Retrieves the full block content of the article from Notion.
-    b. **Summarize with AI**: Sends the content to the Gemini API with a specific prompt to rewrite it in simpler English (CEFR A2-B1 level), with a maximum word count of 800.
-    c. **Register for TTS**: Sends the simplified content, title, and URL to another Notion database for TTS processing.
-    d. **Mark as Processed**: Updates the original article in Notion by checking the "Processed" checkbox to prevent it from being processed again.
+    1. **Fetch Content**: Retrieves the full block content of the article from Notion.
+    2. **Summarize with AI**: Sends the content to the Gemini API with a specific prompt to rewrite it in simpler English (CEFR A2-B1 level), with a maximum word count of 800.
+    3. **Register for TTS**: Sends the simplified content, title, and URL to another Notion database for TTS processing.
+    4. **Mark as Processed**: Updates the original article in Notion by checking the "Processed" checkbox to prevent it from being processed again.
 
 ## Features
 
