@@ -1,3 +1,5 @@
+import 'package:english_speech/gemini.dart';
+import 'package:english_speech/notion_contents_for_tts.dart';
 import 'package:english_speech/notion_web_articles.dart' as notion;
 import 'package:english_speech/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,9 @@ void main() {
   runApp(const MainApp());
 }
 
-enum ProcessState { fetching, done, failed }
+enum ProcessState { fetching, processing, waitCancel, done, failed }
+
+enum ArticleProcessState { waiting, processing, done, failed }
 
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
@@ -18,6 +22,7 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   ProcessState _processState = ProcessState.done;
   List<notion.WebArticlesPage> _articles = []; // Changed from String to List
+  List<ArticleProcessState> _articleProcessStates = [];
   String? _errorMessage;
 
   @override
@@ -44,9 +49,11 @@ class _MainAppState extends State<MainApp> {
             ),
             body: DataDisplayScreen(
               articles: _articles, // Changed from fetchedData to articles
+              articleProcessStates: _articleProcessStates,
               errorMessage: _errorMessage,
               processState: _processState,
               onButtonPressed: buttonPressed,
+              onCancelPressed: cancelPressed,
             ),
           );
         },
@@ -65,15 +72,78 @@ class _MainAppState extends State<MainApp> {
           .then(notion.parseWebArticles)
           .then(notion.enrichArticlesWithWebTitles);
 
+      final articleProcessStates = List.generate(
+        articles.length,
+        (_) => ArticleProcessState.waiting,
+      );
+
       setState(() {
         _articles = articles; // Store articles directly
-        _processState = ProcessState.done;
+        _processState = ProcessState.processing;
+        _articleProcessStates = articleProcessStates;
       });
+
+      await processArticles().whenComplete(handleProcessCompletion);
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
         _processState = ProcessState.failed;
       });
+    }
+  }
+
+  void cancelPressed() async {
+    setState(() {
+      _processState = ProcessState.waitCancel;
+    });
+  }
+
+  void handleProcessCompletion() {
+    if (!mounted) return;
+
+    if (_processState == ProcessState.waitCancel) {
+      // If cancelled, revert the 'processing' item back to 'waiting'
+      final processingIndex = _articleProcessStates.indexWhere(
+        (s) => s == ArticleProcessState.processing,
+      );
+      if (processingIndex != -1) {
+        _articleProcessStates[processingIndex] = ArticleProcessState.waiting;
+      }
+    }
+
+    setState(() => _processState = ProcessState.done);
+  }
+
+  Future<void> processArticles() async {
+    for (int i = 0; i < _articles.length; i++) {
+      setState(() {
+        // Set current article to processing
+        _articleProcessStates[i] = ArticleProcessState.processing;
+      });
+
+      final page = _articles[i];
+
+      try {
+        if (_processState == ProcessState.waitCancel) break;
+        final bs = await notion.getBlockChildren(page.id);
+
+        if (_processState == ProcessState.waitCancel) break;
+        final sc = await getSummurizedContent(
+          bs.expand((b) => b.format()).toList(),
+        );
+
+        if (_processState == ProcessState.waitCancel) break;
+        await registForTTS(title: page.title, url: page.url, content: sc);
+        await notion.markArticleAsProcessed(page.id);
+
+        setState(() {
+          _articleProcessStates[i] = ArticleProcessState.done;
+        });
+      } catch (e) {
+        setState(() {
+          _articleProcessStates[i] = ArticleProcessState.failed;
+        });
+      }
     }
   }
 }
@@ -84,6 +154,8 @@ class DataDisplayScreen extends StatelessWidget {
   final String? errorMessage;
   final ProcessState processState;
   final VoidCallback onButtonPressed;
+  final VoidCallback onCancelPressed;
+  final List<ArticleProcessState> articleProcessStates;
 
   const DataDisplayScreen({
     super.key,
@@ -91,6 +163,8 @@ class DataDisplayScreen extends StatelessWidget {
     this.errorMessage,
     required this.processState,
     required this.onButtonPressed,
+    required this.onCancelPressed,
+    required this.articleProcessStates,
   });
 
   @override
@@ -136,6 +210,28 @@ class DataDisplayScreen extends StatelessWidget {
       itemCount: articles.length,
       itemBuilder: (context, index) {
         final article = articles[index];
+        final articleState = articleProcessStates[index];
+
+        Widget trailingIcon;
+        switch (articleState) {
+          case ArticleProcessState.waiting:
+            trailingIcon = const Icon(Icons.schedule, color: Colors.grey);
+            break;
+          case ArticleProcessState.processing:
+            trailingIcon = const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            );
+            break;
+          case ArticleProcessState.done:
+            trailingIcon = const Icon(Icons.check_circle, color: Colors.green);
+            break;
+          case ArticleProcessState.failed:
+            trailingIcon = const Icon(Icons.error, color: Colors.red);
+            break;
+        }
+
         return Card(
           child: ListTile(
             title: Text(article.title),
@@ -151,6 +247,7 @@ class DataDisplayScreen extends StatelessWidget {
                 ),
               );
             },
+            trailing: trailingIcon,
           ),
         );
       },
@@ -161,12 +258,20 @@ class DataDisplayScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: ElevatedButton(
-        onPressed: processState == ProcessState.fetching
-            ? null
-            : onButtonPressed,
-        child: Text(
-          processState == ProcessState.fetching ? 'Loading...' : 'Run',
-        ),
+        onPressed: switch (processState) {
+          ProcessState.done => onButtonPressed,
+          ProcessState.fetching => null,
+          ProcessState.processing => onCancelPressed,
+          ProcessState.waitCancel => null,
+          ProcessState.failed => null,
+        },
+        child: Text(switch (processState) {
+          ProcessState.done => 'Run',
+          ProcessState.fetching => 'Fetching...',
+          ProcessState.processing => 'Cancel',
+          ProcessState.waitCancel => 'Waiting to cancel...',
+          ProcessState.failed => 'Failed',
+        }),
       ),
     );
   }

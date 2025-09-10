@@ -168,6 +168,36 @@ List<Block> setRowNumberForTableRows(List<Block> blocks) {
   return blocks.groupBy(hasSameType).expand(assignRowNumbers).toList();
 }
 
+Future<String> markArticleAsProcessed(String articleId) async {
+  final String endPointUrl = 'https://api.notion.com/v1/pages/$articleId';
+
+  final Map<String, String> headers = {
+    'Authorization': await SettingsService().getNotionApiKey(),
+    'Notion-Version': '2025-09-03',
+    'Content-Type': 'application/json',
+  };
+
+  final properties = {
+    'Processed': {'checkbox': true},
+  };
+
+  final body = {'properties': properties};
+
+  final res = await http.patch(
+    Uri.parse(endPointUrl),
+    headers: headers,
+    body: jsonEncode(body),
+  );
+
+  if (res.statusCode == 200) {
+    return res.body;
+  } else {
+    throw Exception(
+      'Failed to mark article as processed.  - Status Code = ${res.statusCode}, Message = ${res.body}',
+    );
+  }
+}
+
 sealed class Block {
   final String id;
   final String type;
