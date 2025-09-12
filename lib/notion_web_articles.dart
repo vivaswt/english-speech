@@ -63,6 +63,9 @@ Future<List<WebArticlesPage>> enrichArticlesWithWebTitles(
   List<WebArticlesPage> articles,
 ) {
   Future<WebArticlesPage> enrichArticle(WebArticlesPage article) async {
+    if (!article.title.startsWith('Source:')) {
+      return article;
+    }
     final title = await getTitleOfWebPage(article.url);
     return article.copyWith(title: title ?? article.title);
   }
