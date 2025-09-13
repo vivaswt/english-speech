@@ -45,7 +45,7 @@ class MenuScreen extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.article_outlined),
-            title: const Text('Summarize web articles'),
+            title: const Text('Summarize Web Articles'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
               Navigator.of(context).push(
@@ -57,13 +57,13 @@ class MenuScreen extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.video_library_outlined),
-            title: const Text('Summarize YouTube videos'),
+            title: const Text('Summarize YouTube Videos'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const DummyScreen(
-                    batchName: 'Summarize YouTube videos',
+                    batchName: 'Summarize YouTube Videos',
                     icon: Icons.video_library_outlined,
                   ),
                 ),
@@ -72,13 +72,13 @@ class MenuScreen extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.multitrack_audio_outlined),
-            title: const Text('Creating audio from summarized contents'),
+            title: const Text('Create Audio from Summaries'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const DummyScreen(
-                    batchName: 'Creating audio from summarized contents',
+                    batchName: 'Create Audio from Summaries',
                     icon: Icons.multitrack_audio_outlined,
                   ),
                 ),

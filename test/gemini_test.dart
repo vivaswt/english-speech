@@ -5,7 +5,6 @@ void main() {
   group('fetchSummurizedContent', () {
     test('should return a non-empty summary for valid content', () async {
       final result = await fetchSummurizedContent(sampleArticle1);
-      print(result);
       expect(result, isA<String>());
       expect(result, isNotEmpty);
     });

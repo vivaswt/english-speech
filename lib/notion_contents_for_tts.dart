@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:english_speech/common_types.dart';
 import 'package:english_speech/settings_service.dart';
 import 'package:http/http.dart' as http;
 
@@ -73,4 +74,39 @@ List<Map<String, dynamic>> toBlocks(List<String> content) {
   };
 
   return content.map(toParagraph).toList();
+}
+
+Future<JSONString> fetchContentsForTTS() async {
+  const dataSourceId = '266ca48a865380c3a4ef000b36793bf2';
+  const url = 'https://api.notion.com/v1/data_sources/$dataSourceId/query';
+
+  final Map<String, String> headers = {
+    'Authorization': await SettingsService().getNotionApiKey(),
+    'Notion-Version': '2025-09-03',
+    'Content-Type': 'application/json',
+  };
+
+  const Map<String, dynamic> body = {
+    "sorts": [
+      {"property": "Creation Date", "direction": "descending"},
+    ],
+    "filter": {
+      "property": "Status",
+      "status": {"equals": "unprocessed"},
+    },
+  };
+
+  final res = await http.post(
+    Uri.parse(url),
+    headers: headers,
+    body: jsonEncode(body),
+  );
+
+  if (res.statusCode == 200) {
+    return res.body;
+  } else {
+    throw Exception(
+      'Failed to fetch contents for TTS. Status Code = ${res.statusCode}, Message = ${res.body}',
+    );
+  }
 }

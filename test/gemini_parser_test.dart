@@ -112,7 +112,6 @@ void main() {
         await fetchSummurizedContent(sampleArticle1),
       );
       expect(result, isNotEmpty);
-      result.forEach(print);
     });
   });
 }
