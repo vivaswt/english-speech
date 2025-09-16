@@ -1,3 +1,5 @@
+import 'dart:math';
+
 extension ListExtension<T> on List<T> {
   /// Splits a list into a tuple of two lists based on a predicate.
   ///
@@ -49,4 +51,15 @@ extension ListExtension<T> on List<T> {
     [] => [],
     _ => [take(length).toList(), ...skip(length).toList().divideBy(length)],
   };
+
+  /// Returns a random item from the list.
+  ///
+  /// Throws a [StateError] if the list is empty.
+  T get randomItem {
+    if (isEmpty) {
+      throw StateError('Cannot get a random item from an empty list.');
+    }
+    final random = Random();
+    return this[random.nextInt(length)];
+  }
 }

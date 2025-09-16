@@ -12,12 +12,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   late final TextEditingController _notionApiKeyController;
   late final TextEditingController _geminiApiKeyController;
+  late final TextEditingController _ttsApiKeyController;
+  double _speakingRate = 1.0; // Default value
 
   @override
   void initState() {
     super.initState();
     _notionApiKeyController = TextEditingController();
     _geminiApiKeyController = TextEditingController();
+    _ttsApiKeyController = TextEditingController();
     _loadSettings();
 
     // Add listeners to save the values as the user types.
@@ -27,17 +30,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _geminiApiKeyController.addListener(() {
       _settingsService.setGeminiApiKey(_geminiApiKeyController.text);
     });
+    _ttsApiKeyController.addListener(() {
+      _settingsService.setTtsApiKey(_ttsApiKeyController.text);
+    });
   }
 
   Future<void> _loadSettings() async {
     _notionApiKeyController.text = await _settingsService.getNotionApiKey();
     _geminiApiKeyController.text = await _settingsService.getGeminiApiKey();
+    _speakingRate = await _settingsService.getSpeakingRate();
+    _ttsApiKeyController.text = await _settingsService.getTtsApiKey();
+    // Rebuild the widget to reflect the loaded speaking rate.
+    setState(() {});
   }
 
   @override
   void dispose() {
     _notionApiKeyController.dispose();
     _geminiApiKeyController.dispose();
+    _ttsApiKeyController.dispose();
     super.dispose();
   }
 
@@ -58,6 +69,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _geminiApiKeyController,
               labelText: 'Gemini API Key',
             ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _ttsApiKeyController,
+              labelText: 'Google TTS API Key',
+            ),
+            const SizedBox(height: 24),
+            _buildSpeakingRateSlider(),
           ],
         ),
       ),
@@ -75,6 +93,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
         border: const OutlineInputBorder(),
       ),
       obscureText: true, // API keys should be obscured for security.
+    );
+  }
+
+  Widget _buildSpeakingRateSlider() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Speaking Rate: ${_speakingRate.toStringAsFixed(1)}',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Slider(
+          value: _speakingRate,
+          min: 0.3,
+          max: 2.0,
+          divisions: 17, // (2.0 - 0.3) / 0.1 = 17
+          label: _speakingRate.toStringAsFixed(1),
+          onChanged: (double value) {
+            setState(() {
+              _speakingRate = value;
+            });
+            // Save the value immediately.
+            _settingsService.setSpeakingRate(value);
+          },
+        ),
+      ],
     );
   }
 }

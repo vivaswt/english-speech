@@ -103,6 +103,12 @@ class TtsBatch extends ChangeNotifier {
     TTSContent ttsContent, {
     required void Function(double) onProgress,
   }) async {
+    final voices = await getVoicesList();
+    final voice = voices
+        .where((v) => v.name.contains('Wavenet'))
+        .toList()
+        .randomItem;
+
     final paragraphsList = ttsContent.content.divideBy(_paragraphsLength);
 
     final List<String> bs = [];
@@ -112,9 +118,9 @@ class TtsBatch extends ChangeNotifier {
       onProgress((i + 1) / paragraphsList.length);
 
       final paragraphs = paragraphsList[i];
-      //final r = await callSynthesizeApi(paragraphs);
-      await Future.delayed(Duration(milliseconds: 800));
-      final r = await File('temp_data/linear0.txt').readAsString();
+      final r = await callSynthesizeApi(paragraphs, voice: voice);
+      //await Future.delayed(Duration(milliseconds: 800));
+      //final r = await File('temp_data/linear0.txt').readAsString();
 
       bs.add(r);
     }

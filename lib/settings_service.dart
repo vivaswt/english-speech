@@ -9,6 +9,7 @@ class SettingsService {
   static const _notionApiKey = 'notion_api_key';
   static const _geminiApiKey = 'gemini_api_key';
   static const _ttsApiKey = 'tts_api_key';
+  static const _speakingRateKey = 'speaking_rate_key';
 
   // --- Singleton Pattern ---
   SettingsService._();
@@ -71,5 +72,20 @@ class SettingsService {
     }
     final prefs = await _prefsInstance;
     return prefs.getString(_ttsApiKey) ?? '';
+  }
+
+  /// Sets the speaking rate.
+  Future<void> setSpeakingRate(double value) async {
+    final prefs = await _prefsInstance;
+    await prefs.setDouble(_speakingRateKey, value);
+  }
+
+  /// Gets the speaking rate. Returns 1 if not set.
+  Future<double> getSpeakingRate() async {
+    if (_isTestEnvironment()) {
+      return 1;
+    }
+    final prefs = await _prefsInstance;
+    return prefs.getDouble(_speakingRateKey) ?? 1;
   }
 }
