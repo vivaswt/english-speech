@@ -1,7 +1,7 @@
-import 'package:english_speech/gemini.dart';
-import 'package:english_speech/notion_contents_for_tts.dart';
-import 'package:english_speech/notion_web_articles.dart' as notion;
-import 'package:english_speech/settings_screen.dart';
+import 'package:english_speech/google/gemini.dart';
+import 'package:english_speech/notion/notion_contents_for_tts.dart';
+import 'package:english_speech/notion/notion_web_articles.dart' as notion;
+import 'package:english_speech/screen/settings_screen.dart';
 import 'package:flutter/material.dart';
 
 enum ProcessState { fetching, processing, waitCancel, done, failed }
@@ -127,7 +127,9 @@ class _WebArticleProcessorScreenState extends State<WebArticleProcessorScreen> {
         );
 
         if (_processState == ProcessState.waitCancel) break;
-        await registForTTS(title: page.title, url: page.url, content: sc);
+        await registForTTS(
+          TTSContent(title: page.title, url: page.url, content: sc),
+        );
         await notion.markArticleAsProcessed(page.id);
 
         setState(() {

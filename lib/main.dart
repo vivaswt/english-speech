@@ -1,5 +1,6 @@
-import 'package:english_speech/settings_screen.dart';
-import 'package:english_speech/web_article_processor_screen.dart';
+import 'package:english_speech/screen/settings_screen.dart';
+import 'package:english_speech/screen/web_article_processor_screen.dart';
+import 'package:english_speech/screen/tts_creation_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -77,10 +78,7 @@ class MenuScreen extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const DummyScreen(
-                    batchName: 'Create Audio from Summaries',
-                    icon: Icons.multitrack_audio_outlined,
-                  ),
+                  builder: (context) => const TtsCreationScreen(),
                 ),
               );
             },

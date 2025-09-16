@@ -1,4 +1,4 @@
-import 'package:english_speech/gemini.dart';
+import 'package:english_speech/google/gemini.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

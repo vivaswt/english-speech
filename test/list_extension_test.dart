@@ -1,4 +1,4 @@
-import 'package:english_speech/list_extension.dart';
+import 'package:english_speech/extension/list_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -86,5 +86,87 @@ void main() {
         expect(zs, equals([3]));
       },
     );
+  });
+
+  group('ListExtension.divideBy', () {
+    test('should return an empty list when dividing an empty list', () {
+      // Arrange
+      final list = <int>[];
+
+      // Act
+      final result = list.divideBy(3);
+
+      // Assert
+      expect(result, isEmpty);
+    });
+
+    test('should divide a list into chunks of the specified length', () {
+      // Arrange
+      final list = [1, 2, 3, 4, 5, 6];
+
+      // Act
+      final result = list.divideBy(2);
+
+      // Assert
+      expect(
+        result,
+        equals([
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ]),
+      );
+    });
+
+    test('should handle a list where the last chunk is smaller', () {
+      // Arrange
+      final list = [1, 2, 3, 4, 5];
+
+      // Act
+      final result = list.divideBy(3);
+
+      // Assert
+      expect(
+        result,
+        equals([
+          [1, 2, 3],
+          [4, 5],
+        ]),
+      );
+    });
+
+    test('should return one chunk if length is greater than list size', () {
+      // Arrange
+      final list = [1, 2, 3];
+
+      // Act
+      final result = list.divideBy(5);
+
+      // Assert
+      expect(
+        result,
+        equals([
+          [1, 2, 3],
+        ]),
+      );
+    });
+
+    test('should divide the list into single-element lists if length is 1', () {
+      // Arrange
+      final list = [1, 2, 3];
+
+      // Act
+      final result = list.divideBy(1);
+
+      // Assert
+      expect(
+        result,
+        equals([
+          [1],
+          [2],
+          [3],
+        ]),
+      );
+    });
   });
 }

@@ -8,6 +8,7 @@ import 'dart:io' show Platform;
 class SettingsService {
   static const _notionApiKey = 'notion_api_key';
   static const _geminiApiKey = 'gemini_api_key';
+  static const _ttsApiKey = 'tts_api_key';
 
   // --- Singleton Pattern ---
   SettingsService._();
@@ -55,5 +56,20 @@ class SettingsService {
     }
     final prefs = await _prefsInstance;
     return prefs.getString(_geminiApiKey) ?? '';
+  }
+
+  /// Sets the TTS API key.
+  Future<void> setTtsApiKey(String key) async {
+    final prefs = await _prefsInstance;
+    await prefs.setString(_ttsApiKey, key);
+  }
+
+  /// Gets the TTS API key. Returns an empty string if not set.
+  Future<String> getTtsApiKey() async {
+    if (_isTestEnvironment()) {
+      return Platform.environment['TTS_API_KEY'] ?? '';
+    }
+    final prefs = await _prefsInstance;
+    return prefs.getString(_ttsApiKey) ?? '';
   }
 }

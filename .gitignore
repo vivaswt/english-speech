@@ -26,3 +26,6 @@ lib/generated_plugin_registrant.dart
 
 # Windows
 Thumbs.db
+
+json/
+temp_data/

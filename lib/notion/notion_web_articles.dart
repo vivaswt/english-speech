@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:deep_pick/deep_pick.dart';
 import 'package:english_speech/common_types.dart';
-import 'package:english_speech/list_extension.dart';
+import 'package:english_speech/extension/list_extension.dart';
 import 'package:english_speech/settings_service.dart';
 import 'package:english_speech/web_util.dart';
 import 'package:http/http.dart' as http;
@@ -98,7 +98,7 @@ Future<List<JSONString>> fetchBlockChildren(
   String startCursor = '',
 }) async {
   final String url =
-      'https://api.notion.com/v1/blocks/$pageId/children?page_size=5'
+      'https://api.notion.com/v1/blocks/$pageId/children?page_size=100'
       '${startCursor.isNotEmpty ? '&start_cursor=$startCursor' : ''}';
 
   final Map<String, String> headers = {

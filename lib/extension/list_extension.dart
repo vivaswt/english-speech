@@ -44,4 +44,9 @@ extension ListExtension<T> on List<T> {
       ...xs.span((y) => test(x, y)).$2.groupBy(test),
     ],
   };
+
+  List<List<T>> divideBy(int length) => switch (this) {
+    [] => [],
+    _ => [take(length).toList(), ...skip(length).toList().divideBy(length)],
+  };
 }
