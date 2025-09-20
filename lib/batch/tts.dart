@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:english_speech/google/gemini_tts.dart';
+import 'package:english_speech/settings_service.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:english_speech/extension/list_extension.dart';
@@ -26,9 +28,10 @@ class TtsBatch extends ChangeNotifier {
     notifyListeners();
   }
 
-  void start() async {
+  void start(TtsApiSelection apiSelection) async {
     status = BatchStatus.processing;
     notifyListeners();
+
     // main loop
     for (int i = 0; i < contents.length; i++) {
       if (status != BatchStatus.processing) break;
@@ -36,6 +39,7 @@ class TtsBatch extends ChangeNotifier {
       try {
         final wav = await _synthesizeAndJoinAudio(
           contents[i],
+          apiSelection: apiSelection,
           onProgress: (p) {
             changeItemStatus(
               i,
@@ -93,7 +97,7 @@ class TtsBatch extends ChangeNotifier {
     await Future.delayed(Duration(seconds: 2));
   }
 
-  static const int _paragraphsLength = 3;
+  static const int _paragraphsLength = 1;
 
   /// Synthesizes audio from [TTSContent] in chunks and joins them into a single [Wav] object.
   ///
@@ -101,13 +105,23 @@ class TtsBatch extends ChangeNotifier {
   /// TTS API for each group, and reports progress via the [onProgress] callback.
   Future<Wav> _synthesizeAndJoinAudio(
     TTSContent ttsContent, {
+    required TtsApiSelection apiSelection,
     required void Function(double) onProgress,
   }) async {
-    final voices = await getVoicesList();
-    final voice = voices
-        .where((v) => v.name.contains('Wavenet'))
-        .toList()
-        .randomItem;
+    V selectVoice<V>(List<V> vs) => vs.randomItem;
+    Future<String> Function(List<String>) ttsApi;
+
+    if (apiSelection == TtsApiSelection.googleCloud) {
+      final voices = (await getVoicesList())
+          .where((v) => v.name.contains('Wavenet'))
+          .toList();
+
+      final voice = selectVoice(voices);
+      ttsApi = (inputTexts) => callSynthesizeApi(inputTexts, voice: voice);
+    } else {
+      final voice = selectVoice(predifinedVoiceNames);
+      ttsApi = (inputTexts) => getSpeechAudio(inputTexts, voice);
+    }
 
     final paragraphsList = ttsContent.content.divideBy(_paragraphsLength);
 
@@ -118,7 +132,7 @@ class TtsBatch extends ChangeNotifier {
       onProgress((i + 1) / paragraphsList.length);
 
       final paragraphs = paragraphsList[i];
-      final r = await callSynthesizeApi(paragraphs, voice: voice);
+      final r = await ttsApi(paragraphs);
       //await Future.delayed(Duration(milliseconds: 800));
       //final r = await File('temp_data/linear0.txt').readAsString();
 

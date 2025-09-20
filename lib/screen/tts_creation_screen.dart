@@ -1,4 +1,5 @@
 import 'package:english_speech/batch/tts.dart';
+import 'package:english_speech/settings_service.dart';
 import 'package:flutter/material.dart';
 
 class TtsCreationScreen extends StatefulWidget {
@@ -115,7 +116,9 @@ class _TtsCreationScreenState extends State<TtsCreationScreen> {
     final status = _ttsBatch.status;
 
     final VoidCallback? onPressed = switch (status) {
-      BatchStatus.waitToStart => _ttsBatch.start,
+      BatchStatus.waitToStart => () => _ttsBatch.start(
+        TtsApiSelection.googleCloud,
+      ),
       BatchStatus.processing => _ttsBatch.cancel,
       _ => null,
     };

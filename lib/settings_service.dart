@@ -1,6 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 
+enum TtsApiSelection { googleCloud, gemini }
+
 /// A service class for managing application settings.
 ///
 /// This class abstracts the storage and retrieval of settings, such as
@@ -10,6 +12,7 @@ class SettingsService {
   static const _geminiApiKey = 'gemini_api_key';
   static const _ttsApiKey = 'tts_api_key';
   static const _speakingRateKey = 'speaking_rate_key';
+  static const _ttsApiSelectionKey = 'tts_api_selection_key';
 
   // --- Singleton Pattern ---
   SettingsService._();
@@ -87,5 +90,29 @@ class SettingsService {
     }
     final prefs = await _prefsInstance;
     return prefs.getDouble(_speakingRateKey) ?? 1;
+  }
+
+  /// Sets the TTS API selection.
+  Future<void> setTtsApiSelection(TtsApiSelection value) async {
+    final prefs = await _prefsInstance;
+    await prefs.setString(_ttsApiSelectionKey, value.name);
+  }
+
+  /// Gets the TTS API selection.
+  Future<TtsApiSelection> getTtsApiSelection() async {
+    if (_isTestEnvironment()) {
+      return TtsApiSelection.gemini;
+    }
+    final prefs = await _prefsInstance;
+    final String? value = prefs.getString(_ttsApiSelectionKey);
+
+    if (value == null) {
+      return TtsApiSelection.gemini;
+    }
+
+    return TtsApiSelection.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => TtsApiSelection.gemini,
+    );
   }
 }
