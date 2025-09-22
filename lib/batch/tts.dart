@@ -97,7 +97,7 @@ class TtsBatch extends ChangeNotifier {
     await Future.delayed(Duration(seconds: 2));
   }
 
-  static const int _paragraphsLength = 1;
+  static const int _paragraphsLength = 100;
 
   /// Synthesizes audio from [TTSContent] in chunks and joins them into a single [Wav] object.
   ///
@@ -139,7 +139,10 @@ class TtsBatch extends ChangeNotifier {
       bs.add(r);
     }
 
-    return joinWavsFromBase64(bs);
+    return joinWavsFromBase64(
+      bs,
+      inPCM: apiSelection == TtsApiSelection.gemini,
+    );
   }
 
   static const String _save_folder = 'G:\\マイドライブ\\Music';

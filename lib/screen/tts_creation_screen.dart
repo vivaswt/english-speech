@@ -117,7 +117,8 @@ class _TtsCreationScreenState extends State<TtsCreationScreen> {
 
     final VoidCallback? onPressed = switch (status) {
       BatchStatus.waitToStart => () => _ttsBatch.start(
-        TtsApiSelection.googleCloud,
+        // TtsApiSelection.googleCloud,
+        TtsApiSelection.gemini,
       ),
       BatchStatus.processing => _ttsBatch.cancel,
       _ => null,

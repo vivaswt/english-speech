@@ -6,19 +6,26 @@ import 'package:wav/wav.dart';
 /// Decodes and joins multiple base64-encoded WAV audio strings into a single WAV object.
 ///
 /// It assumes all input WAVs have the same number of channels and sample rate.
-Wav joinWavsFromBase64(Iterable<String> base64EncodedStrings) {
+Wav joinWavsFromBase64(
+  Iterable<String> base64EncodedStrings, {
+  required bool inPCM,
+}) {
   if (base64EncodedStrings.isEmpty) {
     throw ArgumentError('Input cannot be empty.');
   }
 
-  final List<Wav> wavs = base64EncodedStrings
-      .map(base64.decode)
-      // .map(
-      //   (pcm) =>
-      //       pcmToWav(pcm, sampleRate: 24000, numChannels: 1, bitsPerSample: 16),
-      // )
-      .map(Wav.read)
-      .toList();
+  final decodedBytes = base64EncodedStrings.map(base64.decode);
+  final decodedBytes_ = inPCM
+      ? decodedBytes.map(
+          (pcm) => pcmToWav(
+            pcm,
+            sampleRate: 24000,
+            numChannels: 1,
+            bitsPerSample: 16,
+          ),
+        )
+      : decodedBytes;
+  final List<Wav> wavs = decodedBytes_.map(Wav.read).toList();
 
   final List<Float64List> initChannels = List.generate(
     wavs.first.channels.length,
