@@ -11,6 +11,7 @@ class TtsCreationScreen extends StatefulWidget {
 
 class _TtsCreationScreenState extends State<TtsCreationScreen> {
   late final TtsBatch _ttsBatch;
+  TtsApiSelection _selectedApi = TtsApiSelection.gemini;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _TtsCreationScreenState extends State<TtsCreationScreen> {
       body: Column(
         children: [
           Expanded(child: _buildContent()),
+          _buildApiSelector(),
           const SizedBox(height: 16),
           _buildActionButton(),
         ],
@@ -112,14 +114,43 @@ class _TtsCreationScreenState extends State<TtsCreationScreen> {
     );
   }
 
+  Widget _buildApiSelector() {
+    // The selector is only enabled when the batch is waiting to start.
+    final bool isEnabled = _ttsBatch.status == BatchStatus.waitToStart;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SegmentedButton<TtsApiSelection>(
+        segments: const <ButtonSegment<TtsApiSelection>>[
+          ButtonSegment<TtsApiSelection>(
+            value: TtsApiSelection.gemini,
+            label: Text('Gemini'),
+            icon: Icon(Icons.auto_awesome),
+          ),
+          ButtonSegment<TtsApiSelection>(
+            value: TtsApiSelection.googleCloud,
+            label: Text('Google Cloud'),
+            icon: Icon(Icons.cloud),
+          ),
+        ],
+        selected: {_selectedApi},
+        onSelectionChanged: isEnabled
+            ? (newSelection) {
+                setState(() {
+                  _selectedApi = newSelection.first;
+                });
+              }
+            : null, // Disable the button if not in the correct state
+      ),
+    );
+  }
+
   Widget _buildActionButton() {
     final status = _ttsBatch.status;
 
     final VoidCallback? onPressed = switch (status) {
-      BatchStatus.waitToStart => () => _ttsBatch.start(
-        // TtsApiSelection.googleCloud,
-        TtsApiSelection.gemini,
-      ),
+      // TtsApiSelection.googleCloud,
+      BatchStatus.waitToStart => () => _ttsBatch.start(_selectedApi),
       BatchStatus.processing => _ttsBatch.cancel,
       _ => null,
     };

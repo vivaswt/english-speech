@@ -8,6 +8,7 @@ import 'package:english_speech/google/google_tts.dart';
 import 'package:english_speech/notion/notion_contents_for_tts.dart';
 import 'package:english_speech/wav_lib.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:wav/wav.dart';
 
 class TtsBatch extends ChangeNotifier {
@@ -97,7 +98,7 @@ class TtsBatch extends ChangeNotifier {
     await Future.delayed(Duration(seconds: 2));
   }
 
-  static const int _paragraphsLength = 100;
+  static const int _paragraphsLength = 3;
 
   /// Synthesizes audio from [TTSContent] in chunks and joins them into a single [Wav] object.
   ///
@@ -123,7 +124,11 @@ class TtsBatch extends ChangeNotifier {
       ttsApi = (inputTexts) => getSpeechAudio(inputTexts, voice);
     }
 
-    final paragraphsList = ttsContent.content.divideBy(_paragraphsLength);
+    final paragraphsLength = switch (apiSelection) {
+      TtsApiSelection.gemini => ttsContent.content.length,
+      TtsApiSelection.googleCloud => _paragraphsLength,
+    };
+    final paragraphsList = ttsContent.content.divideBy(paragraphsLength);
 
     final List<String> bs = [];
     for (var i = 0; i < paragraphsList.length; i++) {
@@ -145,17 +150,22 @@ class TtsBatch extends ChangeNotifier {
     );
   }
 
-  static const String _save_folder = 'G:\\マイドライブ\\Music';
-
   Future<File> writeWav(String title, Wav wav) async {
-    final path = editFilePath(title);
+    final path = await editFilePath(title);
     await wav.writeFile(path);
     return File(path);
   }
 
-  String editFilePath(String title) {
+  Future<String> editFilePath(String title) async {
+    String saveFolder = await SettingsService().getSaveFolderPath();
+
+    if (saveFolder.isEmpty) {
+      final directory = await getTemporaryDirectory();
+      saveFolder = directory.path;
+    }
+
     final parsedPath = p.joinAll([
-      _save_folder,
+      saveFolder,
       sanitizeFileName(title) + '.wav',
     ]);
     return parsedPath;

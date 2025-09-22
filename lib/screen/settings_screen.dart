@@ -1,5 +1,6 @@
 import 'package:english_speech/settings_service.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,6 +14,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _notionApiKeyController;
   late final TextEditingController _geminiApiKeyController;
   late final TextEditingController _ttsApiKeyController;
+  late final TextEditingController _saveFolderPathController;
   double _speakingRate = 1.0; // Default value
 
   @override
@@ -21,6 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _notionApiKeyController = TextEditingController();
     _geminiApiKeyController = TextEditingController();
     _ttsApiKeyController = TextEditingController();
+    _saveFolderPathController = TextEditingController();
     _loadSettings();
 
     // Add listeners to save the values as the user types.
@@ -33,12 +36,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _ttsApiKeyController.addListener(() {
       _settingsService.setTtsApiKey(_ttsApiKeyController.text);
     });
+    _saveFolderPathController.addListener(() {
+      _settingsService.setSaveFolderPath(_saveFolderPathController.text);
+    });
   }
 
   Future<void> _loadSettings() async {
     _notionApiKeyController.text = await _settingsService.getNotionApiKey();
     _geminiApiKeyController.text = await _settingsService.getGeminiApiKey();
     _speakingRate = await _settingsService.getSpeakingRate();
+    _saveFolderPathController.text = await _settingsService.getSaveFolderPath();
     _ttsApiKeyController.text = await _settingsService.getTtsApiKey();
     // Rebuild the widget to reflect the loaded speaking rate.
     setState(() {});
@@ -49,6 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _notionApiKeyController.dispose();
     _geminiApiKeyController.dispose();
     _ttsApiKeyController.dispose();
+    _saveFolderPathController.dispose();
     super.dispose();
   }
 
@@ -76,6 +84,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 24),
             _buildSpeakingRateSlider(),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _saveFolderPathController,
+              labelText: 'Save Folder Path',
+            ),
           ],
         ),
       ),
@@ -86,14 +99,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required TextEditingController controller,
     required String labelText,
   }) {
+    final bool isSavePath = controller == _saveFolderPathController;
     return TextField(
       controller: controller,
       decoration: InputDecoration(
         labelText: labelText,
         border: const OutlineInputBorder(),
+        suffixIcon: isSavePath
+            ? IconButton(
+                icon: const Icon(Icons.folder_open),
+                onPressed: _pickFolder,
+              )
+            : null,
       ),
-      obscureText: true, // API keys should be obscured for security.
+      obscureText: !isSavePath,
+      readOnly: isSavePath,
+      onTap: isSavePath ? _pickFolder : null,
     );
+  }
+
+  Future<void> _pickFolder() async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    if (selectedDirectory != null) {
+      _saveFolderPathController.text = selectedDirectory;
+    }
   }
 
   Widget _buildSpeakingRateSlider() {

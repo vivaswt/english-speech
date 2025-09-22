@@ -134,6 +134,21 @@ void main() {
         ]),
       );
     });
+    test('should return one chunk if length is equal to list size', () {
+      // Arrange
+      final list = [1, 2, 3];
+
+      // Act
+      final result = list.divideBy(3);
+
+      // Assert
+      expect(
+        result,
+        equals([
+          [1, 2, 3],
+        ]),
+      );
+    });
 
     test('should return one chunk if length is greater than list size', () {
       // Arrange

@@ -13,6 +13,7 @@ class SettingsService {
   static const _ttsApiKey = 'tts_api_key';
   static const _speakingRateKey = 'speaking_rate_key';
   static const _ttsApiSelectionKey = 'tts_api_selection_key';
+  static const _saveFolderPathKey = 'save_folder_path_key';
 
   // --- Singleton Pattern ---
   SettingsService._();
@@ -114,5 +115,18 @@ class SettingsService {
       (e) => e.name == value,
       orElse: () => TtsApiSelection.gemini,
     );
+  }
+
+  /// Sets the save folder path for generated audio.
+  Future<void> setSaveFolderPath(String path) async {
+    final prefs = await _prefsInstance;
+    await prefs.setString(_saveFolderPathKey, path);
+  }
+
+  /// Gets the save folder path for generated audio. Returns an empty string if not set.
+  Future<String> getSaveFolderPath() async {
+    // Don't use test environment for this as it's a user preference.
+    final prefs = await _prefsInstance;
+    return prefs.getString(_saveFolderPathKey) ?? '';
   }
 }
