@@ -114,7 +114,8 @@ class TtsBatch extends ChangeNotifier {
 
     if (apiSelection == TtsApiSelection.googleCloud) {
       final voices = (await getVoicesList())
-          .where((v) => v.name.contains('Wavenet'))
+          //.where((v) => v.name.contains('Wavenet'))
+          .where((v) => v.name.contains('Chirp'))
           .toList();
 
       final voice = selectVoice(voices);

@@ -1,3 +1,4 @@
+import 'package:english_speech/google/youtube.dart';
 import 'package:english_speech/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -89,6 +90,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _saveFolderPathController,
               labelText: 'Save Folder Path',
             ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.video_library_outlined),
+                const SizedBox(width: 8),
+                Text(
+                  'YouTube Account',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const SignStatus(),
           ],
         ),
       ),
@@ -147,6 +163,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _settingsService.setSpeakingRate(value);
           },
         ),
+      ],
+    );
+  }
+}
+
+class SignStatus extends StatefulWidget {
+  const SignStatus({super.key});
+
+  @override
+  State<SignStatus> createState() => _SignStatus();
+}
+
+class _SignStatus extends State<SignStatus> {
+  late final GoogleAuthService googleAuthService;
+
+  @override
+  void initState() {
+    super.initState();
+    googleAuthService = GoogleAuthService();
+    googleAuthService.addListener(onServiceUpdate);
+  }
+
+  @override
+  void dispose() {
+    googleAuthService.removeListener(onServiceUpdate);
+    super.dispose();
+  }
+
+  void onServiceUpdate() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userInfo = googleAuthService.userInfo;
+
+    return Row(
+      children: [
+        if (googleAuthService.isSignedIn && userInfo != null)
+          CircleAvatar(
+            backgroundImage: NetworkImage(userInfo.pictureUrl),
+            radius: 16,
+          )
+        else
+          const CircleAvatar(radius: 16, child: Icon(Icons.person, size: 20)),
+        const SizedBox(width: 12),
+        Text(
+          googleAuthService.isSignedIn && userInfo != null
+              ? userInfo.name
+              : 'Not Signed In',
+        ),
+        const Spacer(),
+        if (googleAuthService.isSignedIn)
+          ElevatedButton(
+            onPressed: googleAuthService.signOut,
+            child: const Text('Sign Out'),
+          )
+        else
+          ElevatedButton(
+            onPressed: googleAuthService.signIn,
+            child: const Text('Sign In'),
+          ),
       ],
     );
   }

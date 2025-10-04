@@ -102,3 +102,69 @@ Follow these rules:
 * Do not add any commentary or analysis.
 * Make sure the total word count is no more than 800 words.
 ''';
+
+Future<List<String>> getYouTubeSummurizedContent(String youTubeURL) =>
+    fetchYouTubeSummurizedContent(youTubeURL).then(parseSummurizedContent);
+
+Future<JSONString> fetchYouTubeSummurizedContent(String youTubeURL) async {
+  const String url =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+  final Map<String, String> headers = {
+    'x-goog-api-key': await SettingsService().getGeminiApiKey(),
+    'Content-Type': 'application/json',
+  };
+
+  final body = {
+    "contents": [
+      {
+        "parts": [
+          {"text": summarizeYouTubePrompt},
+          {
+            "file_data": {"file_uri": youTubeURL},
+          },
+        ],
+      },
+    ],
+    "generationConfig": {
+      "responseMimeType": "application/json",
+      "responseSchema": {
+        "type": "OBJECT",
+        "properties": {
+          "paragraphs": {
+            "type": "ARRAY",
+            "items": {"type": "STRING"},
+          },
+        },
+      },
+    },
+  };
+
+  final res = await http.post(
+    Uri.parse(url),
+    headers: headers,
+    body: jsonEncode(body),
+  );
+
+  if (res.statusCode == 200) {
+    return res.body;
+  } else {
+    throw Exception(
+      'Failed to get summurized content from YouTube. Status Code = ${res.statusCode}, Message = ${res.body}',
+    );
+  }
+}
+
+const String summarizeYouTubePrompt = '''
+You are an English teacher helping Japanese high school students improve their English listening skills.
+
+Your task is to summarize the video in simpler English. Write in plain paragraph form.
+
+Follow these rules:
+
+- Use vocabulary and grammar at CEFR A2–B1 level.
+- Break long or complex sentences into shorter ones.
+- Do not add any commentary or analysis.
+- Make sure the total word count (excluding keyword explanations) is no more than 800 words.
+- If the video content is short, keep the length close to the original and do not expand it.
+''';

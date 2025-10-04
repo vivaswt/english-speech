@@ -124,7 +124,7 @@ Future<JSONString> fetchContentsForTTS() async {
 
   const Map<String, dynamic> body = {
     "sorts": [
-      {"property": "Creation Date", "direction": "descending"},
+      {"property": "Creation Date", "direction": "ascending"},
     ],
     "filter": {
       "property": "Status",
