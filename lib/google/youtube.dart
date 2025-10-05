@@ -129,7 +129,11 @@ Future<List<PlayListItem>> getPlaylistItems({
 }) async {
   final api = YouTubeApi(client);
 
-  final playlistsResponse = await api.playlists.list(['snippet'], mine: true);
+  final playlistsResponse = await api.playlists.list(
+    ['snippet'],
+    mine: true,
+    maxResults: 50,
+  );
   final playlist = playlistsResponse.items
       ?.where((i) => i.snippet?.title == title)
       .singleOrNull;
