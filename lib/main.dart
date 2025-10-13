@@ -1,6 +1,7 @@
 import 'package:english_speech/screen/settings_screen.dart';
 import 'package:english_speech/screen/web_article_processor_screen.dart';
 import 'package:english_speech/screen/tts_creation_screen.dart';
+import 'package:english_speech/screen/youtube_subtitle_processor_screen.dart';
 import 'package:english_speech/screen/youtube_summarizer_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -45,6 +46,18 @@ class MenuScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          ListTile(
+            leading: const Icon(Icons.subtitles_outlined),
+            title: const Text('Convert YouTube Videos to Web Articles'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const YouTubeSubtitlesRegistScreen(),
+                ),
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.article_outlined),
             title: const Text('Summarize Web Articles'),

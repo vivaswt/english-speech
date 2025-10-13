@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
 import 'package:googleapis/youtube/v3.dart';
@@ -114,7 +116,11 @@ class PlayListItem {
 
 Future<List<PlayList>> getPlaylists(Client client) async {
   final api = YouTubeApi(client);
-  final playlistsResponse = await api.playlists.list(['snippet'], mine: true);
+  final playlistsResponse = await api.playlists.list(
+    ['snippet'],
+    mine: true,
+    maxResults: 30,
+  );
   return playlistsResponse.items!
       .map(
         (playlist) =>
@@ -173,4 +179,46 @@ Future<void> deletePlayListItem({
 }) async {
   final api = YouTubeApi(client);
   await api.playlistItems.delete(id);
+}
+
+Future<List<String>> downloadSubtitle(
+  String videoUrl, {
+  required String folder,
+}) async {
+  const subtitleFileName = 'youtube_subtitles.txt';
+
+  final result = await Process.run('yt-dlp', [
+    '--force-overwrites',
+    '--write-subs',
+    '--write-auto-subs',
+    '--sub-format',
+    'srt/ttml/srv3/srv2/vtt',
+    '--skip-download',
+    '-o',
+    'subtitle:$subtitleFileName',
+    '-P',
+    folder,
+    videoUrl,
+  ]);
+
+  if (result.exitCode != 0) {
+    throw Exception('Error downloading subtitle: ${result.stderr}');
+  }
+
+  final fileName = _getFileNameFromLog(result.stdout);
+  if (fileName == null) {
+    throw Exception('Error downloading subtitle: cannot find file name');
+  }
+
+  final file = File(fileName);
+  final texts = await file.readAsLines();
+  await file.delete();
+  return texts;
+}
+
+String? _getFileNameFromLog(String logText) {
+  final result = RegExp(
+    r'\[MoveFiles\] Moving file ".+?" to "(.+?)"',
+  ).firstMatch(logText)?.groups([1]);
+  return result?.first;
 }

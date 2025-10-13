@@ -18,7 +18,7 @@ Future<JSONString> fetchWebArticles() async {
 
   const Map<String, dynamic> body = {
     "sorts": [
-      {"property": "Created time", "direction": "descending"},
+      {"property": "Created time", "direction": "ascending"},
     ],
     "filter": {
       "property": "Processed",
@@ -84,8 +84,8 @@ class WebArticlesPage {
     required this.url,
   });
 
-  WebArticlesPage copyWith({String? title}) =>
-      WebArticlesPage(id: id, title: title ?? this.title, url: url);
+  WebArticlesPage copyWith({String? id, String? title}) =>
+      WebArticlesPage(id: id ?? this.id, title: title ?? this.title, url: url);
 
   @override
   String toString() {
@@ -197,6 +197,104 @@ Future<String> markArticleAsProcessed(String articleId) async {
   } else {
     throw Exception(
       'Failed to mark article as processed.  - Status Code = ${res.statusCode}, Message = ${res.body}',
+    );
+  }
+}
+
+Future<WebArticlesPage> registWebArticle(WebArticlesPage page) async {
+  const String endPointUrl = 'https://api.notion.com/v1/pages';
+
+  final Map<String, String> headers = {
+    'Authorization': await SettingsService().getNotionApiKey(),
+    'Notion-Version': '2025-09-03',
+    'Content-Type': 'application/json',
+  };
+
+  final properties = {
+    'Source': {
+      'type': 'title',
+      'title': [
+        {
+          'type': 'text',
+          'text': {'content': page.title, 'link': null},
+        },
+      ],
+    },
+    'URL': {'url': page.url},
+    'Processed': {'checkbox': false},
+  };
+
+  final body = {
+    'parent': {'data_source_id': '250ca48a86538090819d000b689e44bc'},
+    'properties': properties,
+  };
+
+  final res = await http.post(
+    Uri.parse(endPointUrl),
+    headers: headers,
+    body: jsonEncode(body),
+  );
+
+  if (res.statusCode == 200) {
+    final newId = pick(jsonDecode(res.body), 'id').asStringOrThrow();
+    return page.copyWith(id: newId);
+  } else {
+    throw Exception(
+      'Failed to regist web article:'
+      ' Status Code = ${res.statusCode},'
+      ' Message = ${res.body}',
+    );
+  }
+}
+
+List<Map<String, dynamic>> toBlocks(List<String> content) {
+  Map<String, dynamic> toParagraph(String line) => {
+    'object': 'block',
+    'type': 'paragraph',
+    'paragraph': {
+      'rich_text': [
+        {
+          'type': 'text',
+          'text': {'content': line},
+        },
+      ],
+    },
+  };
+
+  return content.map(toParagraph).toList();
+}
+
+Future<void> appendWebArticleChildren(String pageId, List<String> texts) =>
+    Future.forEach(
+      texts.where((txt) => txt.isNotEmpty).toList().divideBy(100),
+      (txts) => _appendWebArticleChildren(pageId, txts),
+    );
+
+Future<void> _appendWebArticleChildren(
+  String pageId,
+  List<String> texts,
+) async {
+  final endPointUrl = 'https://api.notion.com/v1/blocks/$pageId/children';
+
+  final Map<String, String> headers = {
+    'Authorization': await SettingsService().getNotionApiKey(),
+    'Notion-Version': '2025-09-03',
+    'Content-Type': 'application/json',
+  };
+
+  final body = {'children': toBlocks(texts)};
+
+  final res = await http.patch(
+    Uri.parse(endPointUrl),
+    headers: headers,
+    body: jsonEncode(body),
+  );
+
+  if (res.statusCode != 200) {
+    throw Exception(
+      'Failed to append web article children:'
+      ' Status Code = ${res.statusCode},'
+      ' Message = ${res.body}',
     );
   }
 }
