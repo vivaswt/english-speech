@@ -147,9 +147,11 @@ Future<List<PlayListItem>> getPlaylistItems({
     throw Exception('Playlist "$title" not found');
   }
 
-  final playListItemsReponse = await api.playlistItems.list([
-    'snippet',
-  ], playlistId: playlist.id);
+  final playListItemsReponse = await api.playlistItems.list(
+    ['snippet'],
+    playlistId: playlist.id,
+    maxResults: 50,
+  );
 
   if (playListItemsReponse.items == null) {
     throw Exception('PlayListItem is null');
