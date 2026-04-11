@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:english_speech/google/gemini_tts.dart';
-import 'package:english_speech/settings_service.dart';
+import 'package:english_speech/service/settings_service.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:english_speech/extension/list_extension.dart';

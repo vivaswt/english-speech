@@ -1,5 +1,5 @@
 import 'package:english_speech/batch/tts.dart';
-import 'package:english_speech/settings_service.dart';
+import 'package:english_speech/service/settings_service.dart';
 import 'package:flutter/material.dart';
 
 class TtsCreationScreen extends StatefulWidget {

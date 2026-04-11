@@ -2,6 +2,7 @@ import 'package:english_speech/google/gemini.dart';
 import 'package:english_speech/notion/notion_contents_for_tts.dart';
 import 'package:english_speech/notion/notion_web_articles.dart' as notion;
 import 'package:english_speech/screen/settings_screen.dart';
+import 'package:english_speech/service/log.dart';
 import 'package:flutter/material.dart';
 
 enum ProcessState { fetching, processing, waitCancel, done, failed }
@@ -136,6 +137,7 @@ class _WebArticleProcessorScreenState extends State<WebArticleProcessorScreen> {
           _articleProcessStates[i] = ArticleProcessState.done;
         });
       } catch (e) {
+        talker.error('failed to summarize article', e);
         setState(() {
           _articleProcessStates[i] = ArticleProcessState.failed;
         });

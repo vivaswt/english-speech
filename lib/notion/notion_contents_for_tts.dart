@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:deep_pick/deep_pick.dart';
 import 'package:english_speech/common_types.dart';
 import 'package:english_speech/notion/notion_web_articles.dart';
-import 'package:english_speech/settings_service.dart';
+import 'package:english_speech/service/settings_service.dart';
 import 'package:http/http.dart' as http;
 
 class TTSContent {

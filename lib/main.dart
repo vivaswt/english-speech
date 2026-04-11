@@ -3,7 +3,9 @@ import 'package:english_speech/screen/web_article_processor_screen.dart';
 import 'package:english_speech/screen/tts_creation_screen.dart';
 import 'package:english_speech/screen/youtube_subtitle_processor_screen.dart';
 import 'package:english_speech/screen/youtube_summarizer_screen.dart';
+import 'package:english_speech/service/log.dart';
 import 'package:flutter/material.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 void main() {
   runApp(const MyApp());
@@ -90,6 +92,18 @@ class MenuScreen extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const TtsCreationScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long_outlined),
+            title: const Text('Log'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => TalkerScreen(talker: talker),
                 ),
               );
             },

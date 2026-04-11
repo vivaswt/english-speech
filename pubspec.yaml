@@ -21,6 +21,7 @@ dependencies:
   path_provider: ^2.1.5
   provider: ^6.1.5+1
   shared_preferences: ^2.5.3
+  talker_flutter: ^5.1.16
   wav: ^1.5.0
 
 dev_dependencies:

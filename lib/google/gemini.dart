@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:deep_pick/deep_pick.dart';
 import 'package:english_speech/common_types.dart';
-import 'package:english_speech/settings_service.dart';
+import 'package:english_speech/service/settings_service.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<String>> getSummurizedContent(List<String> content) =>
@@ -53,9 +53,11 @@ Future<JSONString> fetchSummurizedContent(List<String> content) async {
   if (res.statusCode == 200) {
     return res.body;
   } else {
-    throw Exception(
-      'Failed to web articles. Status Code = ${res.statusCode}, Message = ${res.body}',
-    );
+    final msg =
+        'Failed to web articles.'
+        ' Status Code = ${res.statusCode},'
+        ' Message = ${res.body}';
+    throw Exception(msg);
   }
 }
 
