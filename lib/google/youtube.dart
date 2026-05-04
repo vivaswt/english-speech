@@ -5,6 +5,12 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
 import 'package:googleapis/youtube/v3.dart';
 import 'package:http/http.dart' show Client;
 import 'package:jwt_decode/jwt_decode.dart';
+import 'package:path/path.dart' as p;
+
+import 'package:english_speech/extension/object.dart';
+import 'package:english_speech/fp/either.dart';
+import 'package:english_speech/service/log.dart';
+import 'package:english_speech/parser/srt.dart';
 
 class GoogleAuthService extends ChangeNotifier {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -187,8 +193,6 @@ Future<List<String>> downloadSubtitle(
   String videoUrl, {
   required String folder,
 }) async {
-  const subtitleFileName = 'youtube_subtitles.txt';
-
   final result = await Process.run('yt-dlp', [
     '--force-overwrites',
     '--write-subs',
@@ -196,8 +200,6 @@ Future<List<String>> downloadSubtitle(
     '--sub-format',
     'srt/ttml/srv3/srv2/vtt',
     '--skip-download',
-    '-o',
-    'subtitle:$subtitleFileName',
     '-P',
     folder,
     videoUrl,
@@ -213,14 +215,67 @@ Future<List<String>> downloadSubtitle(
   }
 
   final file = File(fileName);
-  final texts = await file.readAsLines();
-  await file.delete();
-  return texts;
+  final fileContents = await file.readAsLines();
+
+  try {
+    final texts = _extractTexts(fileName, fileContents);
+    return texts;
+  } catch (e) {
+    rethrow;
+  } finally {
+    await file.delete();
+  }
 }
 
 String? _getFileNameFromLog(String logText) {
   final result = RegExp(
-    r'\[MoveFiles\] Moving file ".+?" to "(.+?)"',
+    r'\[download\] Destination: (.+)',
   ).firstMatch(logText)?.groups([1]);
   return result?.first;
 }
+
+List<String> _extractTexts(String fileName, List<String> lines) {
+  final extesionName = _getExtensionName(fileName);
+  final extract = _extrancTextsFunction(extesionName);
+  final result = extract(lines);
+
+  switch (result) {
+    case Right(value: final texts):
+      return texts;
+    case Left(value: final message):
+      talker.error('error in extracting texts in file "$fileName")');
+      talker.error(message);
+      throw Exception('Fail to extranct texts from file "$fileName"');
+  }
+}
+
+String _getExtensionName(String fileName) => p.extension(fileName);
+
+Either<String, List<String>> Function(List<String>) _extrancTextsFunction(
+  String extensionName,
+) => switch (extensionName) {
+  '.srt' => _extractTextsFromSrt,
+  _ => (texts) {
+    talker.warning('unsupported subtitle format: $extensionName');
+    return Either.of(texts);
+  },
+};
+
+Either<String, List<String>> _extractTextsFromSrt(List<String> lines) =>
+    SrtParser.parse(lines.join('\n'))
+        .map((entries) => entries.expand((e) => e.lines).toList())
+        .map(_combineFragmentsIntoLines);
+
+List<String> _combineFragmentsIntoLines(
+  List<String> subtitleTexts, [
+  int lineSize = 80,
+]) => subtitleTexts.fold(
+  <String>[],
+  (previousValue, element) => switch (previousValue) {
+    [] => [element],
+    [...(final others), final last]
+        when last.length + element.length < lineSize =>
+      [...others, '$last $element'],
+    _ => [...previousValue, element],
+  },
+);
