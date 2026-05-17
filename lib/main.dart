@@ -1,3 +1,4 @@
+import 'package:english_speech/screen/article_summarizer_screen.dart';
 import 'package:english_speech/screen/settings_screen.dart';
 import 'package:english_speech/screen/web_article_processor_screen.dart';
 import 'package:english_speech/screen/tts_creation_screen.dart';
@@ -92,6 +93,18 @@ class MenuScreen extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const TtsCreationScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.table_bar_outlined),
+            title: const Text('Test Screen'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ArticleSummarizerScreen(),
                 ),
               );
             },
