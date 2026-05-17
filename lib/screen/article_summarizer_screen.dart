@@ -25,7 +25,13 @@ class _ArticleSummarizerScreenState extends State<ArticleSummarizerScreen> {
     builder: (context, state, child) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Summarize Articles'),
+          title: const Row(
+            children: [
+              Icon(Icons.article_outlined),
+              SizedBox(width: 8),
+              Text('Summarize Articles'),
+            ],
+          ),
           actions: _appBarActions(context, state),
           actionsPadding: const EdgeInsets.only(right: 24),
         ),
@@ -35,13 +41,12 @@ class _ArticleSummarizerScreenState extends State<ArticleSummarizerScreen> {
           FetchingState() => [
             Text('Fetching...'),
             CircularProgressIndicator(),
-          ].wrapWithColumn(),
+          ].wrapWithColumn().wrapWithCenter(),
 
           FailToFetchState() => const Center(child: Text('Failed to fetch.')),
 
           SelectingItemsState(:final items) => BatchEditingView(
             batchItems: items,
-            selectionEnabled: true,
             onSelectedChanged: (id, value) =>
                 _batch.dispatch(SelectItem(id: id, selected: value)),
             message: 'Select the articles you want to summarize.',
@@ -49,36 +54,26 @@ class _ArticleSummarizerScreenState extends State<ArticleSummarizerScreen> {
 
           ProcessingState(:final items) => BatchEditingView(
             batchItems: items,
-            selectionEnabled: false,
-            onSelectedChanged: (_, _) {},
             message: 'Proccesing...',
           ),
 
           WaitingCancelState(:final items) => BatchEditingView(
             batchItems: items,
-            selectionEnabled: false,
-            onSelectedChanged: (_, _) {},
             message: 'Waiting to cancel...',
           ),
 
           DoneState(:final items) => BatchEditingView(
             batchItems: items,
-            selectionEnabled: false,
-            onSelectedChanged: (_, _) {},
             message: 'All ariticles have been summarized.',
           ),
 
           CanceledState(:final items) => BatchEditingView(
             batchItems: items,
-            selectionEnabled: false,
-            onSelectedChanged: (_, _) {},
             message: 'The process is canceled.',
           ),
 
           FailedState(:final items) => BatchEditingView(
             batchItems: items,
-            selectionEnabled: false,
-            onSelectedChanged: (_, _) {},
             message: 'Failed to summarize an article and stopped.',
           ),
         },
@@ -121,18 +116,15 @@ class _ArticleSummarizerScreenState extends State<ArticleSummarizerScreen> {
 
 class BatchEditingView extends StatelessWidget {
   final List<BatchItem> _batchItems;
-  final void Function(String, bool) _onSelectedChanged;
-  final bool _selectionEnabled;
+  final void Function(String, bool)? _onSelectedChanged;
   final String? _message;
 
   const BatchEditingView({
     super.key,
     required List<BatchItem> batchItems,
-    required bool selectionEnabled,
-    required void Function(String, bool) onSelectedChanged,
+    void Function(String, bool)? onSelectedChanged,
     String? message,
   }) : _batchItems = batchItems,
-       _selectionEnabled = selectionEnabled,
        _onSelectedChanged = onSelectedChanged,
        _message = message;
 
@@ -142,14 +134,17 @@ class BatchEditingView extends StatelessWidget {
       itemCount: _batchItems.length,
       itemBuilder: (context, index) {
         final item = _batchItems[index];
-        return CheckboxListTile(
-          value: item.selected,
-          onChanged: _selectionEnabled
-              ? (value) => _onSelectedChanged(item.id, value!)
-              : null,
-          title: Text(item.title),
-          secondary: ItemStateIcon(item.state),
-        );
+        return _onSelectedChanged == null
+            ? ListTile(
+                title: Text(item.title),
+                leading: ItemStateIcon(item.state),
+              )
+            : CheckboxListTile(
+                value: item.selected,
+                onChanged: (value) => _onSelectedChanged(item.id, value!),
+                title: Text(item.title),
+                secondary: ItemStateIcon(item.state),
+              );
       },
     ).wrapWithExpanded(),
 

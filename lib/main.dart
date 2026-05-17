@@ -98,8 +98,8 @@ class MenuScreen extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.table_bar_outlined),
-            title: const Text('Test Screen'),
+            leading: const Icon(Icons.article_outlined),
+            title: const Text('Summarize Web Articles[beta]'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
               Navigator.of(context).push(

@@ -7,7 +7,6 @@ import 'package:http/http.dart' show Client;
 import 'package:jwt_decode/jwt_decode.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:english_speech/extension/object.dart';
 import 'package:english_speech/fp/either.dart';
 import 'package:english_speech/service/log.dart';
 import 'package:english_speech/parser/srt.dart';

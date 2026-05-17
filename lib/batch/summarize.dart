@@ -1,6 +1,11 @@
 // --- States ---
+import 'package:english_speech/extension/iterable_extension.dart';
+import 'package:english_speech/google/gemini.dart';
+import 'package:english_speech/notion/notion_contents_for_tts.dart';
 import 'package:english_speech/service/log.dart';
 import 'package:flutter/material.dart';
+
+import 'package:english_speech/notion/notion_web_articles.dart' as notion;
 
 sealed class BatchState {}
 
@@ -107,11 +112,10 @@ class CompleteBatch extends BatchEvent {}
 
 // --- Data ---
 class FetchedItem {
-  final String id;
-  final String title;
-  final List<String> texts;
+  final notion.WebArticlesPage page;
+  final List<notion.Block> blocks;
 
-  FetchedItem({required this.id, required this.title, required this.texts});
+  FetchedItem({required this.page, required this.blocks});
 }
 
 enum BatchItemState { waiting, processing, done, failed }
@@ -119,12 +123,15 @@ enum BatchItemState { waiting, processing, done, failed }
 class BatchItem {
   final String id;
   final String title;
+  final String url;
   final List<String> texts;
   final bool selected;
   final BatchItemState state;
+
   BatchItem({
     required this.id,
     required this.title,
+    required this.url,
     required this.texts,
     required this.selected,
     required this.state,
@@ -133,6 +140,7 @@ class BatchItem {
   BatchItem copyWith({bool? selected, BatchItemState? state}) => BatchItem(
     id: id,
     title: title,
+    url: url,
     texts: texts,
     selected: selected ?? this.selected,
     state: state ?? this.state,
@@ -253,8 +261,23 @@ class Batch {
 
   void _fetch() async {
     try {
-      await Future.delayed(Duration(seconds: 2));
-      dispatch(FetchSuccess(_getDummyFetchedItems()));
+      final articles = await notion
+          .fetchWebArticles()
+          .then(notion.parseWebArticles)
+          .then(notion.enrichArticlesWithWebTitles);
+
+      final blocks = await articles.asyncMapSequential(
+        (fetchedItem) => notion.getBlockChildren(fetchedItem.id),
+      );
+
+      final fetchedItems = articles
+          .zipWith(
+            (article, blocks) => FetchedItem(page: article, blocks: blocks),
+            blocks,
+          )
+          .toList();
+
+      dispatch(FetchSuccess(fetchedItems));
     } catch (_) {
       dispatch(FetchFail());
     }
@@ -305,9 +328,10 @@ class Batch {
       fetchedItems
           .map(
             (item) => BatchItem(
-              id: item.id,
-              title: item.title,
-              texts: item.texts,
+              id: item.page.id,
+              title: item.page.title,
+              url: item.page.url,
+              texts: item.blocks.expand((b) => b.format()).toList(),
               selected: true,
               state: BatchItemState.waiting,
             ),
@@ -321,86 +345,18 @@ Future<BatchItemResult> processBatchItem(
   BatchItem item, {
   required bool Function() toCancel,
 }) async {
-  if (toCancel()) return BatchItemResult.canceled;
-  await Future.delayed(Duration(milliseconds: 500));
+  try {
+    final sc = await getSummurizedContent(item.texts);
+    if (toCancel()) return BatchItemResult.canceled;
 
-  if (toCancel()) return BatchItemResult.canceled;
-  await Future.delayed(Duration(milliseconds: 500));
+    await registForTTS(
+      TTSContent(title: item.title, url: item.url, content: sc),
+    );
+    await notion.markArticleAsProcessed(item.id);
+  } catch (e) {
+    talker.error('failed to summarize article', e);
+    return BatchItemResult.failed;
+  }
 
   return BatchItemResult.complete;
 }
-
-List<FetchedItem> _getDummyFetchedItems() => [
-  FetchedItem(
-    id: '48291056',
-    title: '2026年、最新ガジェット10選',
-    texts: [
-      '今年のトレンドは「完全自動化」です。',
-      '特にAIを搭載したスマートウォッチが市場を席巻しています。',
-      '生活を劇的に変えるデバイスを詳しく紹介します。',
-    ],
-  ),
-  FetchedItem(
-    id: '10923847',
-    title: '初心者でも失敗しない！週末キャンプの極意',
-    texts: [
-      '最近のキャンプブームで、手軽な「手ぶらキャンプ」が人気です。',
-      'まずは近場のキャンプ場から始めるのがおすすめ。',
-      '必要な装備と注意点をまとめました。',
-    ],
-  ),
-  FetchedItem(
-    id: '77342109',
-    title: '話題のカフェ「Blue Moon」潜入レポート',
-    texts: [
-      '表参道にオープンしたばかりのカフェに行ってきました。',
-      '一番人気の「雲色ラテ」は見た目も味も最高。',
-      '店内は落ち着いた雰囲気で、リモートワークにも最適です。',
-    ],
-  ),
-  FetchedItem(
-    id: '55610293',
-    title: '効率的なプログラミング学習法',
-    texts: [
-      '独学で挫折しないためには、アウトプットが重要です。',
-      '毎日15分でもいいのでコードを書く習慣をつけましょう。',
-      'おすすめのオンライン教材も併せて解説します。',
-    ],
-  ),
-  FetchedItem(
-    id: '22904817',
-    title: '自宅でできる！簡単ストレッチ習慣',
-    texts: [
-      'デスクワークで固まった肩や腰をほぐしませんか？',
-      '座ったまま5分でできるエクササイズを紹介します。',
-      '継続することで基礎代謝の向上も期待できます。',
-    ],
-  ),
-  FetchedItem(
-    id: '88127340',
-    title: '宇宙旅行がもっと身近に？最新の民間ロケット開発',
-    texts: [
-      '大手テック企業による宇宙開発競争が加速しています。',
-      '来年には一般向けの月周回旅行も計画されているとのこと。',
-      '夢の話だった宇宙旅行がいよいよ現実味を帯びてきました。',
-    ],
-  ),
-  FetchedItem(
-    id: '33495821',
-    title: '【書評】心の整理術：マインドフルネスの力',
-    texts: [
-      '現代社会のストレスから解放されるためのヒントが詰まった一冊。',
-      'マインドフルネスを日常に取り入れる具体的な方法が書かれています。',
-      '忙しいビジネスマンにこそ読んでほしい内容です。',
-    ],
-  ),
-  FetchedItem(
-    id: '66201984',
-    title: '旬の食材を使った「春の彩りパスタ」レシピ',
-    texts: [
-      'アスパラガスと桜エビを贅沢に使った春らしい一皿です。',
-      'オリーブオイルの香りが食欲をそそります。',
-      '15分で作れるので、忙しい日の夕食にもぴったり。',
-    ],
-  ),
-];
