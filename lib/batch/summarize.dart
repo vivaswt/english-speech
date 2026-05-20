@@ -210,6 +210,7 @@ class Batch {
         );
 
       case (ProcessingState(:final items), FailBatchOfItem(:final id)):
+        _toContinueMainLoop = false;
         _state.value = ProcessingState(
           _updateItemStatus(id, items, BatchItemState.failed),
         );
@@ -297,12 +298,10 @@ class Batch {
       switch (result) {
         case BatchItemResult.canceled:
           dispatch(CanceledBatchOfItem(id: item.id));
-          break;
         case BatchItemResult.complete:
           dispatch(CompleteBatchOfItem(id: item.id));
         case BatchItemResult.failed:
           dispatch(FailBatchOfItem(id: item.id));
-          break;
       }
     }
 
