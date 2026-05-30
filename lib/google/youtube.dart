@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:english_speech/extension/object.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
 import 'package:googleapis/youtube/v3.dart';
@@ -278,3 +280,11 @@ List<String> _combineFragmentsIntoLines(
     _ => [...previousValue, element],
   },
 );
+
+String getThumbnailUrl(String url) =>
+    url.pipe(_getVideoId).pipe(_getThumbnailUrlFromId);
+
+String _getThumbnailUrlFromId(String videoId) =>
+    'https://img.youtube.com/vi/$videoId/0.jpg';
+
+String _getVideoId(String url) => Uri.parse(url).queryParameters['v']!;

@@ -1,4 +1,5 @@
 import 'package:english_speech/screen/article_summarizer_screen.dart';
+import 'package:english_speech/screen/manual_summary_selecti_screen.dart';
 import 'package:english_speech/screen/settings_screen.dart';
 import 'package:english_speech/screen/web_article_processor_screen.dart';
 import 'package:english_speech/screen/tts_creation_screen.dart';
@@ -68,7 +69,19 @@ class MenuScreen extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const WebArticleProcessorScreen(),
+                  builder: (context) => const ArticleSummarizerScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.note_alt_outlined),
+            title: const Text('Manually Summarize Web Articles'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ManualSummarySelectScreen(),
                 ),
               );
             },
@@ -93,18 +106,6 @@ class MenuScreen extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const TtsCreationScreen(),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.article_outlined),
-            title: const Text('Summarize Web Articles[beta]'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ArticleSummarizerScreen(),
                 ),
               );
             },
