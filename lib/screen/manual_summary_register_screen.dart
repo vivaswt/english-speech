@@ -85,30 +85,24 @@ class _ManualSummaryRegisterScreenState
   );
 
   Future<void> _fetchArticleTexts(String pageID) async {
-    final futureBlocks = await notion.getBlockChildren(pageID);
+    final blocks = await notion.getBlockChildren(pageID);
     final prompt =
         summarizeInstruction +
         '\n' +
-        futureBlocks.expand((b) => b.format()).join(' ');
+        blocks.expand((b) => b.format()).join(' ');
 
     if (!mounted) return;
 
-    _viewStateNotifier.value = WaitingSummaryState(
-      prompt: prompt,
-      summaryController: _summaryController,
-    );
+    _viewStateNotifier.value = WaitingSummaryState(prompt: prompt);
   }
 
   Future<void> _register(BuildContext context) async {
     switch (_viewStateNotifier.value) {
-      case ReadyToRegisterState(:final prompt, :final summaryController):
-        _viewStateNotifier.value = RegisteringState(
-          prompt: prompt,
-          summaryController: summaryController,
-        );
+      case ReadyToRegisterState(:final prompt):
+        _viewStateNotifier.value = RegisteringState(prompt: prompt);
 
         try {
-          final content = summaryController.text
+          final content = _summaryController.text
               .split('\n')
               .where((line) => line.trim().isNotEmpty)
               .toList();
@@ -134,7 +128,6 @@ class _ManualSummaryRegisterScreenState
           _viewStateNotifier.value = ErrorState(
             prompt: prompt,
             message: 'failed to register summarized article',
-            summaryController: summaryController,
           );
         }
 
@@ -149,20 +142,14 @@ class _ManualSummaryRegisterScreenState
     final summary = _summaryController.text;
 
     switch (_viewStateNotifier.value) {
-      case WaitingSummaryState(:final prompt, :final summaryController):
+      case WaitingSummaryState(:final prompt):
         if (summary.isNotEmpty) {
-          _viewStateNotifier.value = ReadyToRegisterState(
-            prompt: prompt,
-            summaryController: summaryController,
-          );
+          _viewStateNotifier.value = ReadyToRegisterState(prompt: prompt);
         }
 
-      case ReadyToRegisterState(:final prompt, :final summaryController):
+      case ReadyToRegisterState(:final prompt):
         if (summary.isEmpty) {
-          _viewStateNotifier.value = WaitingSummaryState(
-            prompt: prompt,
-            summaryController: summaryController,
-          );
+          _viewStateNotifier.value = WaitingSummaryState(prompt: prompt);
         }
 
       default:
@@ -292,9 +279,8 @@ class LoadingState extends ViewState {}
 
 class WaitingSummaryState extends ViewState {
   final String prompt;
-  final TextEditingController summaryController;
 
-  WaitingSummaryState({required this.prompt, required this.summaryController});
+  WaitingSummaryState({required this.prompt});
 
   @override
   bool get canEditSummary => true;
@@ -302,9 +288,8 @@ class WaitingSummaryState extends ViewState {
 
 class ReadyToRegisterState extends ViewState {
   final String prompt;
-  final TextEditingController summaryController;
 
-  ReadyToRegisterState({required this.prompt, required this.summaryController});
+  ReadyToRegisterState({required this.prompt});
 
   @override
   bool get canRegister => true;
@@ -315,21 +300,15 @@ class ReadyToRegisterState extends ViewState {
 
 class RegisteringState extends ViewState {
   final String prompt;
-  final TextEditingController summaryController;
 
-  RegisteringState({required this.prompt, required this.summaryController});
+  RegisteringState({required this.prompt});
 }
 
 class ErrorState extends ViewState {
   final String prompt;
   final String message;
-  final TextEditingController summaryController;
 
-  ErrorState({
-    required this.prompt,
-    required this.message,
-    required this.summaryController,
-  });
+  ErrorState({required this.prompt, required this.message});
 
   @override
   bool get canRegister => true;
