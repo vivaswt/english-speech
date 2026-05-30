@@ -137,12 +137,14 @@ class BatchEditingView extends StatelessWidget {
         return _onSelectedChanged == null
             ? ListTile(
                 title: Text(item.title),
+                subtitle: Text('${item.countOfWords} words'),
                 leading: ItemStateIcon(item.state),
               )
             : CheckboxListTile(
                 value: item.selected,
                 onChanged: (value) => _onSelectedChanged(item.id, value!),
                 title: Text(item.title),
+                subtitle: Text('${item.countOfWords} words'),
                 secondary: ItemStateIcon(item.state),
               );
       },

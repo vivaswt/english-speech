@@ -145,6 +145,10 @@ class BatchItem {
     selected: selected ?? this.selected,
     state: state ?? this.state,
   );
+
+  int get countOfWords => texts
+      .map((line) => line.split(' ').where((w) => w.trim().isNotEmpty).length)
+      .reduce((a, b) => a + b);
 }
 
 extension BatchItemsExtension on List<BatchItem> {
